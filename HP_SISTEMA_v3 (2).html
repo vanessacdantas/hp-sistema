@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HP Sistema – Logística Mineral</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0F14;color:#E8ECF4;font-family:'IBM Plex Sans',sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#161A23}::-webkit-scrollbar-thumb{background:#2E3650;border-radius:3px}
+input,select,textarea{background:#0D0F14;border:1px solid #2E3650;color:#E8ECF4;padding:8px 12px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;width:100%;transition:border-color .2s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#C9A84C}
+label{font-size:11px;font-weight:600;letter-spacing:.08em;color:#7A8299;text-transform:uppercase;display:block;margin-bottom:4px}
+.btn{border:none;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;font-weight:600;letter-spacing:.05em;border-radius:4px;padding:10px 20px;font-size:13px;transition:all .15s}
+.btn-gold{background:#C9A84C;color:#0D0F14}.btn-gold:hover{background:#E8C96B}
+.btn-outline{background:transparent;border:1px solid #2E3650;color:#7A8299}.btn-outline:hover{border-color:#C9A84C;color:#C9A84C}
+.btn-green{background:transparent;border:1px solid #2ECC71;color:#2ECC71}.btn-green:hover{background:#2ECC71;color:#0D0F14}
+.btn-danger{background:transparent;border:1px solid #E74C3C;color:#E74C3C;padding:6px 12px;font-size:12px}.btn-danger:hover{background:#E74C3C;color:white}
+.btn-sm{padding:6px 14px;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#1E2330;color:#C9A84C;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:10px 12px;text-align:left;border-bottom:1px solid #2E3650;white-space:nowrap}
+tbody tr{border-bottom:1px solid #2E3650;transition:background .1s}
+tbody tr:hover{background:#1E2330}
+tbody td{padding:7px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;white-space:nowrap}
+tbody td input,tbody td select{padding:4px 8px;font-size:12px;border-radius:3px;min-width:80px}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.06em}
+.card{background:#161A23;border:1px solid #2E3650;border-radius:8px;padding:24px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#161A23;border:1px solid #2E3650;border-radius:8px;width:100%;max-width:900px;max-height:90vh;overflow-y:auto}
+.modal-sm{max-width:480px!important}
+.divider{height:1px;background:#2E3650;margin:16px 0}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.08em;color:#C9A84C}
+.text-muted{color:#7A8299}.text-gold{color:#C9A84C}.text-green{color:#2ECC71}.text-red{color:#E74C3C}
+.badge-green{background:rgba(46,204,113,.15);color:#2ECC71;border:1px solid rgba(46,204,113,.3)}
+.badge-gold{background:rgba(201,168,76,.15);color:#C9A84C;border:1px solid rgba(201,168,76,.3)}
+.badge-blue{background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)}
+.badge-orange{background:rgba(255,165,0,.15);color:orange;border:1px solid rgba(255,165,0,.3)}
+.filter-bar{background:#161A23;border:1px solid #2E3650;border-radius:8px;padding:16px 20px;margin-bottom:16px}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeIn .25s ease}
+@keyframes slideIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+.slide-in{animation:slideIn .2s ease}
+.toast{position:fixed;bottom:28px;right:28px;background:#1E2330;border:1px solid #2E3650;border-radius:6px;padding:12px 20px;font-size:13px;z-index:2000;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.toast-success{border-color:rgba(46,204,113,.5);color:#2ECC71}
+.toast-error{border-color:rgba(231,76,60,.5);color:#E74C3C}
+@media print{body{background:white!important;color:black!important}nav,.no-print{display:none!important}thead th{background:#f0f0f0!important;color:#333!important}tbody td{color:#333!important}.tag{border:1px solid #999!important;color:#333!important;background:none!important}}
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0D0F14}
+.login-card{background:#161A23;border:1px solid #2E3650;border-radius:12px;padding:40px;width:100%;max-width:400px}
+.badge-admin{background:rgba(201,168,76,.15);color:#C9A84C;border:1px solid rgba(201,168,76,.4);padding:2px 10px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.1em}
+.badge-operador{background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.4);padding:2px 10px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.1em}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useCallback,useRef,useMemo} = React;
+
+// ── HELPERS ──────────────────────────────────────────────────────────
+const LS = {
+  get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+// ── AUTH HELPERS ─────────────────────────────────────────────────────
+const hashPwd=s=>{let h=0;for(let i=0;i<s.length;i++){h=Math.imul(31,h)+s.charCodeAt(i)|0;}return h.toString(36);};
+const DEFAULT_USERS=[{id:1,nome:"Administrador",login:"admin",pwd:hashPwd("admin123"),perfil:"admin"},{id:2,nome:"Operador",login:"operador",pwd:hashPwd("operador123"),perfil:"operador"}];
+const getUsers=()=>LS.get("hp:users",DEFAULT_USERS);
+const saveUsers=u=>LS.set("hp:users",u);
+
+// ── LOGIN SCREEN ──────────────────────────────────────────────────────
+const LoginScreen=({onLogin})=>{
+  const [login,setLogin]=useState("");
+  const [pwd,setPwd]=useState("");
+  const [err,setErr]=useState("");
+  const handleLogin=()=>{
+    const users=getUsers();
+    const u=users.find(u=>u.login===login.trim()&&u.pwd===hashPwd(pwd));
+    if(u){onLogin(u);}else{setErr("Login ou senha incorretos.");}
+  };
+  return(
+    <div className="login-screen">
+      <div className="login-card fade-in">
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <div style={{width:52,height:52,background:"linear-gradient(135deg,#C9A84C,#8B5E1A)",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontFamily:"'Bebas Neue',sans-serif",color:"#0D0F14",margin:"0 auto 14px"}}>HP</div>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:".1em",color:"#C9A84C"}}>HP SISTEMA</div>
+          <div style={{fontSize:11,letterSpacing:".15em",color:"#7A8299",marginTop:2}}>LOGÍSTICA MINERAL</div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div><label>Login</label><input value={login} onChange={e=>setLogin(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="Seu login" autoFocus/></div>
+          <div><label>Senha</label><input type="password" value={pwd} onChange={e=>setPwd(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="Sua senha"/></div>
+          {err&&<div style={{color:"#E74C3C",fontSize:12,fontFamily:"'IBM Plex Mono',monospace"}}>{err}</div>}
+          <button className="btn btn-gold" onClick={handleLogin} style={{marginTop:4}}>Entrar</button>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+// ── USER MANAGER MODAL ────────────────────────────────────────────────
+const UserManager=({onClose,currentUser})=>{
+  const [users,setUsersState]=useState(getUsers());
+  const [form,setForm]=useState({nome:"",login:"",pwd:"",perfil:"operador"});
+  const [err,setErr]=useState("");
+  const save=u=>{saveUsers(u);setUsersState(u);};
+  const add=()=>{
+    if(!form.nome.trim()||!form.login.trim()||!form.pwd.trim()){setErr("Preencha todos os campos.");return;}
+    if(users.find(u=>u.login===form.login.trim())){setErr("Login já existe.");return;}
+    const novo=[...users,{id:Date.now(),nome:form.nome.trim(),login:form.login.trim(),pwd:hashPwd(form.pwd),perfil:form.perfil}];
+    save(novo);setForm({nome:"",login:"",pwd:"",perfil:"operador"});setErr("");
+  };
+  const remove=id=>{
+    if(id===currentUser.id){alert("Você não pode excluir seu próprio usuário.");return;}
+    if(!confirm("Excluir usuário?"))return;
+    save(users.filter(u=>u.id!==id));
+  };
+  const resetPwd=(id)=>{
+    const nova=prompt("Nova senha:");if(!nova)return;
+    save(users.map(u=>u.id===id?{...u,pwd:hashPwd(nova)}:u));
+    alert("Senha alterada!");
+  };
+  return(
+    <div className="modal-overlay">
+      <div className="modal slide-in" style={{maxWidth:580,padding:28}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+          <div className="section-title" style={{fontSize:18}}>CONTROLE DE USUÁRIOS</div>
+          <button className="btn btn-outline btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <div style={{background:"#1E2330",border:"1px solid #2E3650",borderRadius:6,padding:16,marginBottom:16}}>
+          <div style={{fontSize:10,fontWeight:700,color:"#C9A84C",letterSpacing:".1em",marginBottom:10}}>NOVO USUÁRIO</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 14px",marginBottom:10}}>
+            <div><label>Nome</label><input value={form.nome} onChange={e=>setForm(p=>({...p,nome:e.target.value}))} placeholder="Nome completo"/></div>
+            <div><label>Login</label><input value={form.login} onChange={e=>setForm(p=>({...p,login:e.target.value}))} placeholder="login"/></div>
+            <div><label>Senha</label><input type="password" value={form.pwd} onChange={e=>setForm(p=>({...p,pwd:e.target.value}))} placeholder="senha"/></div>
+            <div><label>Perfil</label><select value={form.perfil} onChange={e=>setForm(p=>({...p,perfil:e.target.value}))}><option value="admin">Administrador</option><option value="operador">Operador</option></select></div>
+          </div>
+          {err&&<div style={{color:"#E74C3C",fontSize:11,marginBottom:8}}>{err}</div>}
+          <button className="btn btn-gold btn-sm" onClick={add}>+ Adicionar Usuário</button>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {users.map(u=>(
+            <div key={u.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#1E2330",borderRadius:4,padding:"10px 14px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:13}}>{u.nome}</span>
+                <span style={{fontSize:11,color:"#7A8299"}}>@{u.login}</span>
+                <span className={u.perfil==="admin"?"badge-admin":"badge-operador"}>{u.perfil==="admin"?"ADMIN":"OPERADOR"}</span>
+                {u.id===currentUser.id&&<span style={{fontSize:10,color:"#7A8299"}}>(você)</span>}
+              </div>
+              <div style={{display:"flex",gap:6}}>
+                <button className="btn btn-outline btn-sm" style={{fontSize:11}} onClick={()=>resetPwd(u.id)}>🔑 Senha</button>
+                {u.id!==currentUser.id&&<button className="btn btn-danger" onClick={()=>remove(u.id)}>✕</button>}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:20,textAlign:"right"}}><button className="btn btn-gold" onClick={onClose}>Fechar</button></div>
+      </div>
+    </div>
+  );
+};
+
+const fmt=n=>(n!=null&&n!==""&&!isNaN(n))?Number(n).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:4}):n||"—";
+const fmtCur=n=>(n!=null&&n!=""&&!isNaN(n))?Number(n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}):"—";
+const fmtPct=n=>(n!=null&&n!=""&&!isNaN(n))?(Number(n)*100).toFixed(4)+"%":"—";
+const today=()=>new Date().toISOString().split("T")[0];
+const DEFAULT_PAYMENT=["PIX","TED","DOC","DINHEIRO","CHEQUE","OUTRO"];
+const DEFAULT_CERTIFIERS=["ASA","SGS","BUREAU VERITAS","INTERTEK","OUTRO"];
+const TABS=[{id:"dashboard",label:"PAINEL"},{id:"cadastro",label:"CADASTRO"},{id:"financeiro",label:"FINANCEIRO"},{id:"rel_operacao",label:"REL. OPERAÇÃO"},{id:"rel_financeiro",label:"REL. FINANCEIRO"}];
+
+// ── TOAST ────────────────────────────────────────────────────────────
+const Toast=({msg,type,onDone})=>{
+  useEffect(()=>{const t=setTimeout(onDone,2800);return()=>clearTimeout(t)},[]);
+  return <div className={`toast toast-${type}`}><span>{type==="success"?"✓":"✕"}</span>{msg}</div>;
+};
+
+// ── NAV ──────────────────────────────────────────────────────────────
+const Nav=({active,setActive,currentUser,onLogout,onManageUsers})=>(
+  <nav style={{background:"#161A23",borderBottom:"1px solid #2E3650",display:"flex",alignItems:"center",padding:"0 24px",position:"sticky",top:0,zIndex:100}} className="no-print">
+    <div style={{display:"flex",alignItems:"center",gap:10,marginRight:32,padding:"12px 0"}}>
+      <div style={{width:30,height:30,background:"linear-gradient(135deg,#C9A84C,#8B5E1A)",borderRadius:4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontFamily:"'Bebas Neue',sans-serif",color:"#0D0F14",flexShrink:0}}>HP</div>
+      <div>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:".1em",color:"#C9A84C"}}>HP SISTEMA</div>
+        <div style={{fontSize:9,letterSpacing:".15em",color:"#7A8299"}}>LOGÍSTICA MINERAL</div>
+      </div>
+    </div>
+    <div style={{display:"flex",gap:0,flex:1}}>
+      {TABS.map(t=>(
+        <button key={t.id} className="btn" onClick={()=>setActive(t.id)} style={{background:active===t.id?"rgba(201,168,76,.12)":"transparent",color:active===t.id?"#C9A84C":"#7A8299",border:"none",borderBottom:active===t.id?"2px solid #C9A84C":"2px solid transparent",borderRadius:0,padding:"12px 14px",fontSize:11,letterSpacing:".08em",cursor:"pointer",whiteSpace:"nowrap"}}>{t.label}</button>
+      ))}
+    </div>
+    <div style={{display:"flex",gap:10,alignItems:"center",paddingLeft:16,borderLeft:"1px solid #2E3650",flexShrink:0}}>
+      <div style={{textAlign:"right"}}>
+        <div style={{fontSize:12,fontWeight:600,color:"#E8ECF4"}}>{currentUser.nome}</div>
+        <div style={{display:"flex",alignItems:"center",gap:6,justifyContent:"flex-end",marginTop:2}}>
+          <span className={currentUser.perfil==="admin"?"badge-admin":"badge-operador"}>{currentUser.perfil==="admin"?"ADMIN":"OPERADOR"}</span>
+        </div>
+      </div>
+      {currentUser.perfil==="admin"&&<button className="btn btn-outline btn-sm" onClick={onManageUsers} style={{fontSize:11}}>👥 Usuários</button>}
+      <button className="btn btn-outline btn-sm" onClick={onLogout} style={{fontSize:11,borderColor:"#E74C3C",color:"#E74C3C"}}>Sair</button>
+    </div>
+  </nav>
+);
+
+// ── FIELD GROUP ───────────────────────────────────────────────────────
+const FG=({label,children})=><div style={{display:"flex",flexDirection:"column",gap:4}}><label>{label}</label>{children}</div>;
+const Grid=({cols=4,children,style})=><div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:"12px 16px",...style}}>{children}</div>;
+const StatCard=({label,value,sub,color="#C9A84C"})=>(
+  <div className="card" style={{padding:"14px 18px"}}>
+    <div style={{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:"#7A8299",marginBottom:3}}>{label}</div>
+    <div style={{fontSize:20,fontFamily:"'IBM Plex Mono',monospace",fontWeight:600,color}}>{value}</div>
+    {sub&&<div style={{fontSize:11,color:"#7A8299",marginTop:2}}>{sub}</div>}
+  </div>
+);
+
+// ── FILTER BAR ────────────────────────────────────────────────────────
+const FilterBar=({filters,setFilters,placeholder="Buscar...",extraFields,onClear,count,total,children})=>(
+  <div className="filter-bar no-print">
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr auto",gap:"10px 14px",alignItems:"end"}}>
+      <FG label="Operação"><input value={filters.operacao||""} onChange={e=>setFilters(p=>({...p,operacao:e.target.value}))} placeholder="Filtrar operação..."/></FG>
+      <FG label="Cliente"><input value={filters.cliente||""} onChange={e=>setFilters(p=>({...p,cliente:e.target.value}))} placeholder="Filtrar cliente..."/></FG>
+      <FG label="Lote"><input value={filters.lote||""} onChange={e=>setFilters(p=>({...p,lote:e.target.value}))} placeholder="Filtrar lote..."/></FG>
+      <FG label="Data"><input type="date" value={filters.data||""} onChange={e=>setFilters(p=>({...p,data:e.target.value}))}/></FG>
+      <button className="btn btn-outline btn-sm" onClick={onClear} style={{whiteSpace:"nowrap",alignSelf:"end"}}>✕ Limpar</button>
+    </div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:10}}>
+      <span style={{fontSize:12,color:"#7A8299"}}>{count} de {total} registro(s)</span>
+      <div style={{display:"flex",gap:8}}>{children}</div>
+    </div>
+  </div>
+);
+
+// ── CERTIFIER MANAGER MODAL ────────────────────────────────────────────
+const CertifierManager=({certifiers,setCertifiers,onClose})=>{
+  const [newVal,setNewVal]=useState("");
+  const add=()=>{const v=newVal.trim().toUpperCase();if(v&&!certifiers.includes(v)){setCertifiers(p=>[...p,v]);setNewVal("");}};
+  const remove=c=>{if(confirm(`Remover certificadora "${c}"?`))setCertifiers(p=>p.filter(x=>x!==c));};
+  return(
+    <div className="modal-overlay">
+      <div className="modal modal-sm slide-in" style={{padding:28}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+          <div className="section-title" style={{fontSize:18}}>CERTIFICADORAS</div>
+          <button className="btn btn-outline btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <div style={{marginBottom:16}}>
+          <div style={{display:"flex",gap:8}}>
+            <input value={newVal} onChange={e=>setNewVal(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} placeholder="Nova certificadora..." style={{flex:1}}/>
+            <button className="btn btn-gold btn-sm" onClick={add}>Adicionar</button>
+          </div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+          {certifiers.map(c=>(
+            <div key={c} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#1E2330",borderRadius:4,padding:"8px 12px"}}>
+              <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:13}}>{c}</span>
+              <button className="btn btn-danger" style={{padding:"3px 10px",fontSize:11}} onClick={()=>remove(c)}>✕</button>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:20,textAlign:"right"}}>
+          <button className="btn btn-gold" onClick={onClose}>Fechar</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── IMPORT XLSX/CSV MODAL ─────────────────────────────────────────────
+const ImportModal=({type,onImport,onClose,certifiers})=>{
+  const [preview,setPreview]=useState(null);
+  const [error,setError]=useState("");
+  const fileRef=useRef();
+
+  const CAD_COLS=["operacao","cliente","lote","cntr","data","cu_pct","au_gr","peso","peso_seco","valor_cu","valor_au","custo_total","certificadora","invoice"];
+  const FIN_COLS=["data","cliente","lote","operacao","valor","forma_pgto","obs"];
+  const cols=type==="cadastro"?CAD_COLS:FIN_COLS;
+
+  const CAD_HEADERS=["Operação","Cliente","Lote","CNTR","Data","CU%","AU-GR","Peso","Peso Seco","Valor CU","Valor AU","Custo Total","Certificadora","Invoice"];
+  const FIN_HEADERS=["Data","Cliente","Lote","Operação","Valor","Forma Pgto","Observações"];
+  const headers=type==="cadastro"?CAD_HEADERS:FIN_HEADERS;
+
+  const handleFile=e=>{
+    const file=e.target.files[0];if(!file)return;
+    setError("");setPreview(null);
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        let rows=[];
+        const name=file.name.toLowerCase();
+        if(name.endsWith(".csv")){
+          const text=ev.target.result;
+          const lines=text.split(/\r?\n/).filter(l=>l.trim());
+          if(lines.length<2){setError("Arquivo vazio ou sem dados.");return;}
+          rows=lines.slice(1).map(l=>{
+            const vals=l.split(/[,;]/).map(v=>v.trim().replace(/^"|"$/g,""));
+            const obj={id:Date.now()+Math.random()};
+            cols.forEach((c,i)=>{obj[c]=vals[i]||"";});
+            return obj;
+          });
+        } else {
+          const wb=XLSX.read(ev.target.result,{type:"array"});
+          const ws=wb.Sheets[wb.SheetNames[0]];
+          const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+          if(data.length<2){setError("Planilha vazia ou sem dados.");return;}
+          rows=data.slice(1).filter(r=>r.some(c=>c!=="")).map(r=>{
+            const obj={id:Date.now()+Math.random()};
+            cols.forEach((c,i)=>{
+              let v=r[i]??""
+              // handle Excel date serial
+              if((c==="data")&&typeof v==="number"){
+                const d=new Date(Math.round((v-25569)*86400*1000));
+                v=d.toISOString().split("T")[0];
+              } else if(v instanceof Date){
+                v=v.toISOString().split("T")[0];
+              } else {
+                v=String(v).trim();
+              }
+              obj[c]=v;
+            });
+            if(type==="cadastro"){
+              obj.custo_total=(parseFloat(obj.valor_cu)||0)+(parseFloat(obj.valor_au)||0);
+              if(!obj.certificadora)obj.certificadora="ASA";
+            }
+            if(type==="financeiro"&&!obj.forma_pgto)obj.forma_pgto="PIX";
+            return obj;
+          });
+        }
+        if(!rows.length){setError("Nenhuma linha encontrada após o cabeçalho.");return;}
+        setPreview(rows.slice(0,5));
+        fileRef.current._rows=rows;
+      }catch(err){setError("Erro ao ler o arquivo: "+err.message);}
+    };
+    if(file.name.toLowerCase().endsWith(".csv"))reader.readAsText(file,"UTF-8");
+    else reader.readAsArrayBuffer(file);
+  };
+
+  const confirm_import=()=>{
+    if(!fileRef.current?._rows)return;
+    onImport(fileRef.current._rows);
+    onClose();
+  };
+
+  const downloadTemplate=()=>{
+    const ws=XLSX.utils.aoa_to_sheet([headers]);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"Template");
+    XLSX.writeFile(wb,`template_${type}.xlsx`);
+  };
+
+  return(
+    <div className="modal-overlay">
+      <div className="modal slide-in" style={{maxWidth:700,padding:28}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+          <div className="section-title" style={{fontSize:18}}>IMPORTAR PLANILHA — {type.toUpperCase()}</div>
+          <button className="btn btn-outline btn-sm" onClick={onClose}>✕</button>
+        </div>
+
+        <div style={{background:"#1E2330",border:"1px solid #2E3650",borderRadius:6,padding:"12px 16px",marginBottom:16}}>
+          <div style={{fontSize:11,fontWeight:700,color:"#C9A84C",letterSpacing:".08em",marginBottom:6}}>ORDEM OBRIGATÓRIA DAS COLUNAS</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+            {headers.map((h,i)=>(
+              <span key={h} style={{background:"#252B3B",border:"1px solid #2E3650",borderRadius:3,padding:"3px 8px",fontSize:11,fontFamily:"'IBM Plex Mono',monospace"}}>
+                <span style={{color:"#7A8299"}}>{i+1}.</span> {h}
+              </span>
+            ))}
+          </div>
+          <button className="btn btn-outline btn-sm" onClick={downloadTemplate} style={{marginTop:10,fontSize:11}}>⬇ Baixar template .xlsx</button>
+        </div>
+
+        <FG label="Selecione o arquivo (.xlsx, .xls ou .csv)">
+          <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} ref={fileRef} style={{padding:"8px"}}/>
+        </FG>
+
+        {error&&<div style={{marginTop:10,color:"#E74C3C",fontSize:12,fontFamily:"'IBM Plex Mono',monospace"}}>{error}</div>}
+
+        {preview&&(
+          <div style={{marginTop:16}}>
+            <div style={{fontSize:11,color:"#7A8299",marginBottom:8}}>Pré-visualização (primeiras {preview.length} linhas)</div>
+            <div style={{overflowX:"auto"}}>
+              <table>
+                <thead><tr>{headers.map(h=><th key={h}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {preview.map((r,i)=>(
+                    <tr key={i}>{cols.map(c=><td key={c} style={{color:"#E8ECF4"}}>{r[c]||"—"}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{marginTop:6,fontSize:11,color:"#7A8299"}}>Total encontrado: {fileRef.current?._rows?.length||0} linha(s)</div>
+          </div>
+        )}
+
+        <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:20}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-gold" onClick={confirm_import} disabled={!preview}>
+            Importar {fileRef.current?._rows?.length||0} registros
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── FORM CADASTRO (modal novo/editar) ─────────────────────────────────
+const emptyCad=()=>({operacao:"",cliente:"",lote:"",cntr:"",data:today(),cu_pct:"",cert_cu_pct:"",vl_ponto_cu:"",au_gr:"",cert_au:"",ponto_au:"",peso:"",valor_cu:"",valor_au:"",certificadora:"ASA",umidade:"",invoice:"",peso_seco:""});
+const CadastroForm=({initial,onSave,onCancel,certifiers,onManageCerts})=>{
+  const [f,setF]=useState(initial||emptyCad());
+  const s=(k,v)=>setF(p=>({...p,[k]:v}));
+  const custo=(parseFloat(f.valor_cu)||0)+(parseFloat(f.valor_au)||0);
+  return(
+    <div style={{padding:28}}>
+      <div style={{marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div>
+          <div className="section-title">{initial?.id?"EDITAR OPERAÇÃO":"NOVA OPERAÇÃO"}</div>
+          {initial?.id&&<div style={{fontSize:11,color:"#7A8299",marginTop:2}}>ID #{initial.id}</div>}
+        </div>
+      </div>
+      <div className="divider"/>
+      <div style={{marginBottom:12}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#7A8299",textTransform:"uppercase",marginBottom:10}}>IDENTIFICAÇÃO</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:"12px 16px",marginBottom:12}}>
+          <FG label="Operação"><input value={f.operacao} onChange={e=>s("operacao",e.target.value)} placeholder="Ex: LOTE 2 MING"/></FG>
+          <FG label="Cliente"><input value={f.cliente} onChange={e=>s("cliente",e.target.value)} placeholder="Nome do cliente"/></FG>
+        </div>
+        <Grid cols={3}>
+          <FG label="Lote"><input value={f.lote} onChange={e=>s("lote",e.target.value)} placeholder="Ex: GR008"/></FG>
+          <FG label="CNTR"><input type="number" step="0.01" value={f.cntr} onChange={e=>s("cntr",e.target.value)} placeholder="0.00"/></FG>
+          <FG label="Data"><input type="date" value={f.data} onChange={e=>s("data",e.target.value)}/></FG>
+        </Grid>
+      </div>
+      <div className="divider"/>
+      <div style={{marginBottom:12}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#7A8299",textTransform:"uppercase",marginBottom:10}}>COBRE (CU)</div>
+        <Grid cols={4}>
+          <FG label="CU %"><input type="number" step="0.0001" value={f.cu_pct} onChange={e=>s("cu_pct",e.target.value)} placeholder="0.0000"/></FG>
+          <FG label="CERT – CU %"><input type="number" step="0.0001" value={f.cert_cu_pct} onChange={e=>s("cert_cu_pct",e.target.value)} placeholder="0.0000"/></FG>
+          <FG label="Valor Ponto CU (R$)"><input type="number" step="0.01" value={f.vl_ponto_cu} onChange={e=>s("vl_ponto_cu",e.target.value)} placeholder="0.00"/></FG>
+          <FG label="Valor CU (R$)"><input type="number" step="0.01" value={f.valor_cu} onChange={e=>s("valor_cu",e.target.value)} placeholder="0.00"/></FG>
+        </Grid>
+      </div>
+      <div className="divider"/>
+      <div style={{marginBottom:12}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#7A8299",textTransform:"uppercase",marginBottom:10}}>OURO (AU)</div>
+        <Grid cols={4}>
+          <FG label="AU – GR"><input type="number" step="0.0001" value={f.au_gr} onChange={e=>s("au_gr",e.target.value)} placeholder="0.0000"/></FG>
+          <FG label="CERT – AU"><input type="number" step="0.0001" value={f.cert_au} onChange={e=>s("cert_au",e.target.value)} placeholder="0.0000"/></FG>
+          <FG label="Ponto AU – GR"><input type="number" step="0.01" value={f.ponto_au} onChange={e=>s("ponto_au",e.target.value)} placeholder="0.00"/></FG>
+          <FG label="Valor AU (R$)"><input type="number" step="0.01" value={f.valor_au} onChange={e=>s("valor_au",e.target.value)} placeholder="0.00"/></FG>
+        </Grid>
+      </div>
+      <div className="divider"/>
+      <div style={{marginBottom:12}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#7A8299",textTransform:"uppercase",marginBottom:10}}>PESO & CERTIFICAÇÃO</div>
+        <Grid cols={4}>
+          <FG label="Peso (kg)"><input type="number" step="0.001" value={f.peso} onChange={e=>s("peso",e.target.value)} placeholder="0.000"/></FG>
+          <FG label="Umidade %"><input type="number" step="0.01" value={f.umidade} onChange={e=>s("umidade",e.target.value)} placeholder="0.00"/></FG>
+          <FG label="Peso Seco (kg)"><input type="number" step="0.001" value={f.peso_seco} onChange={e=>s("peso_seco",e.target.value)} placeholder="0.000"/></FG>
+          <FG label="Invoice"><input type="number" value={f.invoice} onChange={e=>s("invoice",e.target.value)} placeholder="Número"/></FG>
+          <FG label={<span>Certificadora <button onClick={onManageCerts} style={{background:"none",border:"none",color:"#C9A84C",cursor:"pointer",fontSize:10,marginLeft:4}}>+ Gerenciar</button></span>}>
+            <select value={f.certificadora} onChange={e=>s("certificadora",e.target.value)}>
+              {certifiers.map(c=><option key={c}>{c}</option>)}
+            </select>
+          </FG>
+        </Grid>
+      </div>
+      <div className="divider"/>
+      <div style={{background:"#1E2330",border:"1px solid #2E3650",borderRadius:6,padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+        <div>
+          <div style={{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:"#7A8299"}}>Custo Total Calculado</div>
+          <div style={{fontSize:24,fontFamily:"'IBM Plex Mono',monospace",fontWeight:700,color:"#C9A84C"}}>{fmtCur(custo)}</div>
+        </div>
+        <div style={{fontSize:11,color:"#7A8299"}}>CU + AU</div>
+      </div>
+      <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+        <button className="btn btn-outline" onClick={onCancel}>Cancelar</button>
+        <button className="btn btn-gold" onClick={()=>onSave({...f,custo_total:custo})}>{initial?.id?"Salvar Alterações":"Registrar Operação"}</button>
+      </div>
+    </div>
+  );
+};
+
+// ── FORM FINANCEIRO ───────────────────────────────────────────────────
+const emptyFin=()=>({data:today(),lote:"",operacao:"",cliente:"",valor:"",forma_pgto:"PIX",obs:""});
+const FinanceiroForm=({initial,onSave,onCancel,cadastros,paymentMethods})=>{
+  const [f,setF]=useState(initial||emptyFin());
+  const s=(k,v)=>setF(p=>({...p,[k]:v}));
+  const clientes=[...new Set(cadastros.map(c=>c.cliente).filter(Boolean))];
+  const lotes=[...new Set(cadastros.map(c=>c.lote).filter(Boolean))];
+  const ops=[...new Set(cadastros.map(c=>c.operacao).filter(Boolean))];
+  return(
+    <div style={{padding:28}}>
+      <div style={{marginBottom:20}}><div className="section-title">{initial?.id?"EDITAR RECEBIMENTO":"NOVO RECEBIMENTO"}</div></div>
+      <div className="divider"/>
+      <Grid cols={3} style={{marginBottom:16}}>
+        <FG label="Data"><input type="date" value={f.data} onChange={e=>s("data",e.target.value)}/></FG>
+        <FG label="Cliente"><input list="cl-list" value={f.cliente} onChange={e=>s("cliente",e.target.value)} placeholder="Cliente"/><datalist id="cl-list">{clientes.map(c=><option key={c} value={c}/>)}</datalist></FG>
+        <FG label="Lote"><input list="lt-list" value={f.lote} onChange={e=>s("lote",e.target.value)} placeholder="Lote"/><datalist id="lt-list">{lotes.map(l=><option key={l} value={l}/>)}</datalist></FG>
+        <FG label="Operação"><input list="op-list" value={f.operacao} onChange={e=>s("operacao",e.target.value)} placeholder="Operação"/><datalist id="op-list">{ops.map(o=><option key={o} value={o}/>)}</datalist></FG>
+        <FG label="Valor (R$)"><input type="number" step="0.01" value={f.valor} onChange={e=>s("valor",e.target.value)} placeholder="0.00"/></FG>
+        <FG label="Forma de Pagamento"><select value={f.forma_pgto} onChange={e=>s("forma_pgto",e.target.value)}>{paymentMethods.map(p=><option key={p}>{p}</option>)}</select></FG>
+        <div style={{gridColumn:"span 3"}}><FG label="Observações"><textarea rows={2} value={f.obs} onChange={e=>s("obs",e.target.value)} placeholder="Observações..." style={{resize:"vertical"}}/></FG></div>
+      </Grid>
+      <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+        <button className="btn btn-outline" onClick={onCancel}>Cancelar</button>
+        <button className="btn btn-gold" onClick={()=>onSave(f)}>{initial?.id?"Salvar Alterações":"Registrar Recebimento"}</button>
+      </div>
+    </div>
+  );
+};
+
+
+
+// ── APP ───────────────────────────────────────────────────────────────
+function App(){
+  const [currentUser,setCurrentUser]=useState(()=>LS.get("hp:session",null));
+  const [showUserManager,setShowUserManager]=useState(false);
+  const isAdmin=currentUser?.perfil==="admin";
+
+  const [tab,setTab]=useState("dashboard");
+  const [cadastros,setCadastros]=useState(()=>LS.get("hp:cadastros",[]));
+  const [financeiros,setFinanceiros]=useState(()=>LS.get("hp:financeiros",[]));
+  const [saldoInicial,setSaldoInicial]=useState(()=>LS.get("hp:saldo",1720000));
+  const [certifiers,setCertifiers]=useState(()=>LS.get("hp:certifiers",DEFAULT_CERTIFIERS));
+  const [paymentMethods]=useState(DEFAULT_PAYMENT);
+
+  // modals
+  const [showCadForm,setShowCadForm]=useState(false);
+  const [editCad,setEditCad]=useState(null);
+  const [showFinForm,setShowFinForm]=useState(false);
+  const [editFin,setEditFin]=useState(null);
+  const [showCertManager,setShowCertManager]=useState(false);
+  const [showImportCad,setShowImportCad]=useState(false);
+  const [showImportFin,setShowImportFin]=useState(false);
+
+  // filters
+  const [cadFilters,setCadFilters]=useState({operacao:"",cliente:"",lote:"",data:""});
+  const [finFilters,setFinFilters]=useState({operacao:"",cliente:"",lote:"",data:""});
+  const [relOpFiltro,setRelOpFiltro]=useState({lote:"",operacao:"",data_ini:"",data_fim:""});
+  const [relFinFiltro,setRelFinFiltro]=useState({cliente:"",operacao:"",data_ini:"",data_fim:""});
+
+  // inline editing
+
+  // toast
+  const [toast,setToast]=useState(null);
+  const showToast=(msg,type="success")=>setToast({msg,type});
+
+  // persist
+  useEffect(()=>LS.set("hp:cadastros",cadastros),[cadastros]);
+  useEffect(()=>LS.set("hp:financeiros",financeiros),[financeiros]);
+  useEffect(()=>LS.set("hp:saldo",saldoInicial),[saldoInicial]);
+  useEffect(()=>LS.set("hp:certifiers",certifiers),[certifiers]);
+
+  // CRUD
+  const saveCad=d=>{
+    if(editCad?.id)setCadastros(p=>p.map(c=>c.id===editCad.id?{...d,id:editCad.id}:c));
+    else setCadastros(p=>[{...d,id:Date.now()},...p]);
+    setShowCadForm(false);setEditCad(null);showToast("Operação salva com sucesso!");
+  };
+  const saveFin=d=>{
+    if(editFin?.id)setFinanceiros(p=>p.map(f=>f.id===editFin.id?{...d,id:editFin.id}:f));
+    else setFinanceiros(p=>[{...d,id:Date.now()},...p]);
+    setShowFinForm(false);setEditFin(null);showToast("Recebimento salvo com sucesso!");
+  };
+
+  // Inline editing helpers
+
+
+  // Import
+  const importCadRows=rows=>{
+    const withIds=rows.map(r=>({...r,id:r.id||Date.now()+Math.random()}));
+    setCadastros(p=>[...withIds,...p]);
+    showToast(`${rows.length} operações importadas!`);
+  };
+  const importFinRows=rows=>{
+    const withIds=rows.map(r=>({...r,id:r.id||Date.now()+Math.random()}));
+    setFinanceiros(p=>[...withIds,...p]);
+    showToast(`${rows.length} recebimentos importados!`);
+  };
+
+  // Auth
+  const handleLogin=u=>{setCurrentUser(u);LS.set("hp:session",u);};
+  const handleLogout=()=>{setCurrentUser(null);LS.set("hp:session",null);};
+
+  // Filtered lists
+  const applyFilters=(list,f)=>list.filter(r=>{
+    if(f.operacao&&!(r.operacao||"").toLowerCase().includes(f.operacao.toLowerCase()))return false;
+    if(f.cliente&&!(r.cliente||"").toLowerCase().includes(f.cliente.toLowerCase()))return false;
+    if(f.lote&&!(r.lote||"").toLowerCase().includes(f.lote.toLowerCase()))return false;
+    if(f.data&&r.data!==f.data)return false;
+    return true;
+  });
+  const filteredCad=applyFilters(cadastros,cadFilters);
+  const filteredFin=applyFilters(financeiros,finFilters);
+
+  const filterOp=cadastros.filter(c=>{
+    if(relOpFiltro.lote&&!c.lote.toLowerCase().includes(relOpFiltro.lote.toLowerCase()))return false;
+    if(relOpFiltro.operacao&&!c.operacao.toLowerCase().includes(relOpFiltro.operacao.toLowerCase()))return false;
+    if(relOpFiltro.data_ini&&c.data<relOpFiltro.data_ini)return false;
+    if(relOpFiltro.data_fim&&c.data>relOpFiltro.data_fim)return false;
+    return true;
+  });
+  const filterFin=financeiros.filter(f=>{
+    if(relFinFiltro.cliente&&!(f.cliente||"").toLowerCase().includes(relFinFiltro.cliente.toLowerCase()))return false;
+    if(relFinFiltro.operacao&&!(f.operacao||"").toLowerCase().includes(relFinFiltro.operacao.toLowerCase()))return false;
+    if(relFinFiltro.data_ini&&f.data<relFinFiltro.data_ini)return false;
+    if(relFinFiltro.data_fim&&f.data>relFinFiltro.data_fim)return false;
+    return true;
+  });
+  const finWithBal=(()=>{let bal=saldoInicial;return[...filterFin].reverse().map(f=>{const prev=bal;bal+=parseFloat(f.valor)||0;return{...f,saldo_anterior:prev,saldo_atual:bal};}).reverse();})();
+
+  const totalCusto=cadastros.reduce((a,c)=>a+(parseFloat(c.custo_total)||0),0);
+  const totalRec=financeiros.reduce((a,f)=>a+(parseFloat(f.valor)||0),0);
+  const saldo=saldoInicial+totalRec;
+
+  if(!currentUser)return <LoginScreen onLogin={handleLogin}/>;
+
+  return(
+    <>
+      {toast&&<Toast msg={toast.msg} type={toast.type} onDone={()=>setToast(null)}/>}
+      {showUserManager&&<UserManager onClose={()=>setShowUserManager(false)} currentUser={currentUser}/>}
+
+      {showCadForm&&<div className="modal-overlay"><div className="modal fade-in">
+        <CadastroForm initial={editCad} onSave={saveCad} onCancel={()=>{setShowCadForm(false);setEditCad(null);}} certifiers={certifiers} onManageCerts={()=>setShowCertManager(true)}/>
+      </div></div>}
+
+      {showFinForm&&<div className="modal-overlay"><div className="modal fade-in" style={{maxWidth:700}}>
+        <FinanceiroForm initial={editFin} onSave={saveFin} onCancel={()=>{setShowFinForm(false);setEditFin(null);}} cadastros={cadastros} paymentMethods={paymentMethods}/>
+      </div></div>}
+
+      {showCertManager&&<CertifierManager certifiers={certifiers} setCertifiers={setCertifiers} onClose={()=>setShowCertManager(false)}/>}
+      {showImportCad&&<ImportModal type="cadastro" onImport={importCadRows} onClose={()=>setShowImportCad(false)} certifiers={certifiers}/>}
+      {showImportFin&&<ImportModal type="financeiro" onImport={importFinRows} onClose={()=>setShowImportFin(false)} certifiers={certifiers}/>}
+
+      <Nav active={tab} setActive={setTab} currentUser={currentUser} onLogout={handleLogout} onManageUsers={()=>setShowUserManager(true)}/>
+
+      <div style={{padding:"24px 28px",maxWidth:1600,margin:"0 auto"}}>
+
+        {/* ── PAINEL ─────────────────────────────────────────────── */}
+        {tab==="dashboard"&&<div className="fade-in">
+          <div style={{marginBottom:24}}>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,letterSpacing:".08em",color:"#C9A84C"}}>PAINEL GERAL</div>
+            <div style={{color:"#7A8299",fontSize:13}}>Visão consolidada das operações</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
+            <StatCard label="Operações Cadastradas" value={cadastros.length} color="#C9A84C"/>
+            <StatCard label="Total de Recebimentos" value={financeiros.length} color="#3B82F6"/>
+            <StatCard label="Custo Total Operações" value={fmtCur(totalCusto)} color="#E74C3C"/>
+            <StatCard label="Saldo Atual" value={fmtCur(saldo)} sub={`Inicial: ${fmtCur(saldoInicial)}`} color="#2ECC71"/>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18,marginBottom:18}}>
+            <div className="card">
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                <div className="section-title" style={{fontSize:16}}>ÚLTIMAS OPERAÇÕES</div>
+                <button className="btn btn-gold btn-sm" onClick={()=>{setTab("cadastro");setShowCadForm(true);}}>+ Nova</button>
+              </div>
+              <table><thead><tr><th>Lote</th><th>Operação</th><th>Data</th><th>Custo Total</th></tr></thead>
+                <tbody>
+                  {cadastros.slice(0,8).map(c=><tr key={c.id}><td><span className="tag badge-gold">{c.lote}</span></td><td style={{color:"#7A8299"}}>{c.operacao}</td><td style={{color:"#7A8299"}}>{c.data}</td><td className="text-gold">{fmtCur(c.custo_total)}</td></tr>)}
+                  {cadastros.length===0&&<tr><td colSpan={4} style={{textAlign:"center",color:"#7A8299",padding:24}}>Nenhuma operação registrada</td></tr>}
+                </tbody>
+              </table>
+            </div>
+            <div className="card">
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                <div className="section-title" style={{fontSize:16}}>ÚLTIMOS RECEBIMENTOS</div>
+                <button className="btn btn-gold btn-sm" onClick={()=>{setTab("financeiro");setShowFinForm(true);}}>+ Novo</button>
+              </div>
+              <table><thead><tr><th>Data</th><th>Cliente</th><th>Valor</th><th>Forma</th></tr></thead>
+                <tbody>
+                  {financeiros.slice(0,8).map(f=><tr key={f.id}><td style={{color:"#7A8299"}}>{f.data}</td><td>{f.cliente}</td><td className="text-green">{fmtCur(f.valor)}</td><td><span className="tag badge-blue">{f.forma_pgto}</span></td></tr>)}
+                  {financeiros.length===0&&<tr><td colSpan={4} style={{textAlign:"center",color:"#7A8299",padding:24}}>Nenhum recebimento</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="card" style={{padding:"14px 20px"}}>
+            <div style={{display:"flex",alignItems:"center",gap:16}}>
+              <div style={{fontSize:11,fontWeight:700,letterSpacing:".1em",color:"#7A8299",textTransform:"uppercase",whiteSpace:"nowrap"}}>Saldo Inicial (Base)</div>
+              <input type="number" value={saldoInicial} onChange={e=>setSaldoInicial(parseFloat(e.target.value)||0)} style={{width:200}}/>
+              <div style={{fontSize:12,color:"#7A8299"}}>Valor base para cálculo do saldo corrente</div>
+            </div>
+          </div>
+        </div>}
+
+        {/* ── CADASTRO ─────────────────────────────────────────────── */}
+        {tab==="cadastro"&&<div className="fade-in">
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18}}>
+            <div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,letterSpacing:".08em",color:"#C9A84C"}}>CADASTRO DE OPERAÇÃO</div>
+              <div style={{color:"#7A8299",fontSize:13}}>{cadastros.length} operações • {filteredCad.length} exibidas</div>
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button className="btn btn-outline btn-sm" onClick={()=>setShowCertManager(true)}>⚙ Certificadoras</button>
+              {isAdmin&&<button className="btn btn-green btn-sm" onClick={()=>setShowImportCad(true)}>⬆ Importar Planilha</button>}
+              <button className="btn btn-gold" onClick={()=>{setEditCad(null);setShowCadForm(true);}}>+ Nova Operação</button>
+            </div>
+          </div>
+
+          <FilterBar filters={cadFilters} setFilters={setCadFilters} count={filteredCad.length} total={cadastros.length} onClear={()=>setCadFilters({operacao:"",cliente:"",lote:"",data:""})}>
+            
+          </FilterBar>
+
+          <div style={{overflowX:"auto"}}>
+            <table>
+              <thead><tr>
+                <th>#</th><th>Operação</th><th>Cliente</th><th>Lote</th><th>CNTR</th><th>Data</th>
+                <th>CU%</th><th>AU-GR</th><th>Peso kg</th><th>Peso Seco</th>
+                <th>Valor CU</th><th>Valor AU</th><th>Custo Total</th><th>Certif.</th><th>Invoice</th>
+                <th style={{textAlign:"center",minWidth:130}}>Ações</th>
+              </tr></thead>
+              <tbody>
+                {filteredCad.map((c,i)=>(
+                  <tr key={c.id}>
+                    <td className="text-muted">{i+1}</td>
+                    <td><span className="tag badge-gold">{c.operacao}</span></td>
+                    <td>{c.cliente}</td>
+                    <td className="text-gold">{c.lote}</td>
+                    <td className="text-muted">{fmt(c.cntr)}</td>
+                    <td className="text-muted">{c.data}</td>
+                    <td>{fmtPct(c.cu_pct)}</td>
+                    <td>{fmt(c.au_gr)}</td>
+                    <td>{fmt(c.peso)}</td>
+                    <td>{fmt(c.peso_seco)}</td>
+                    <td className="text-gold">{fmtCur(c.valor_cu)}</td>
+                    <td className="text-gold">{fmtCur(c.valor_au)}</td>
+                    <td style={{fontWeight:600,color:"#C9A84C"}}>{fmtCur(c.custo_total)}</td>
+                    <td><span className="tag badge-blue">{c.certificadora}</span></td>
+                    <td className="text-muted">{c.invoice}</td>
+                    <td style={{display:"flex",gap:6,justifyContent:"center",padding:"6px 8px"}}>
+                      <button className="btn btn-outline btn-sm" onClick={()=>{setEditCad(c);setShowCadForm(true);}} title="Editar">✎ Editar</button>
+                      <button className="btn btn-danger" onClick={()=>{if(confirm("Excluir operação?"))setCadastros(p=>p.filter(x=>x.id!==c.id));}}>✕</button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredCad.length===0&&<tr><td colSpan={16} style={{textAlign:"center",color:"#7A8299",padding:40}}>{cadastros.length===0?"Nenhuma operação cadastrada.":"Nenhum resultado para os filtros aplicados."}</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+        </div>}
+
+        {/* ── FINANCEIRO ─────────────────────────────────────────────── */}
+        {tab==="financeiro"&&<div className="fade-in">
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18}}>
+            <div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,letterSpacing:".08em",color:"#C9A84C"}}>RECEBIMENTOS</div>
+              <div style={{color:"#7A8299",fontSize:13}}>Saldo atual: <span style={{color:"#2ECC71",fontFamily:"'IBM Plex Mono',monospace"}}>{fmtCur(saldo)}</span></div>
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              {isAdmin&&<button className="btn btn-green btn-sm" onClick={()=>setShowImportFin(true)}>⬆ Importar Planilha</button>}
+              <button className="btn btn-gold" onClick={()=>{setEditFin(null);setShowFinForm(true);}}>+ Novo Recebimento</button>
+            </div>
+          </div>
+
+          <FilterBar filters={finFilters} setFilters={setFinFilters} count={filteredFin.length} total={financeiros.length} onClear={()=>setFinFilters({operacao:"",cliente:"",lote:"",data:""})}>
+            
+          </FilterBar>
+
+          <div style={{overflowX:"auto"}}>
+            <table>
+              <thead><tr>
+                <th>#</th><th>Data</th><th>Cliente</th><th>Lote</th><th>Operação</th>
+                <th>Valor</th><th>Forma Pgto</th><th>Observações</th>
+                <th style={{textAlign:"center",minWidth:130}}>Ações</th>
+              </tr></thead>
+              <tbody>
+                {filteredFin.map((f,i)=>(
+                  <tr key={f.id}>
+                    <td className="text-muted">{i+1}</td>
+                    <td className="text-muted">{f.data}</td>
+                    <td>{f.cliente}</td>
+                    <td className="text-gold">{f.lote}</td>
+                    <td>{f.operacao}</td>
+                    <td className="text-green" style={{fontWeight:600}}>{fmtCur(f.valor)}</td>
+                    <td><span className="tag badge-blue">{f.forma_pgto}</span></td>
+                    <td style={{color:"#7A8299",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis"}}>{f.obs}</td>
+                    <td style={{display:"flex",gap:6,justifyContent:"center",padding:"6px 8px"}}>
+                      <button className="btn btn-outline btn-sm" onClick={()=>{setEditFin(f);setShowFinForm(true);}} title="Editar">✎ Editar</button>
+                      <button className="btn btn-danger" onClick={()=>{if(confirm("Excluir recebimento?"))setFinanceiros(p=>p.filter(x=>x.id!==f.id));}}>✕</button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredFin.length===0&&<tr><td colSpan={9} style={{textAlign:"center",color:"#7A8299",padding:40}}>{financeiros.length===0?"Nenhum recebimento registrado.":"Nenhum resultado para os filtros aplicados."}</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+        </div>}
+
+        {/* ── REL. OPERAÇÃO ────────────────────────────────────────── */}
+        {tab==="rel_operacao"&&<div className="fade-in">
+          <div style={{marginBottom:20}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,letterSpacing:".08em",color:"#C9A84C"}}>RELATÓRIO DE OPERAÇÃO</div></div>
+          <div className="card no-print" style={{marginBottom:18}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#7A8299",textTransform:"uppercase",marginBottom:10}}>FILTROS</div>
+            <Grid cols={4}>
+              <FG label="Lote"><input value={relOpFiltro.lote} onChange={e=>setRelOpFiltro(p=>({...p,lote:e.target.value}))} placeholder="Filtrar lote..."/></FG>
+              <FG label="Operação"><input value={relOpFiltro.operacao} onChange={e=>setRelOpFiltro(p=>({...p,operacao:e.target.value}))} placeholder="Filtrar operação..."/></FG>
+              <FG label="Data Inicial"><input type="date" value={relOpFiltro.data_ini} onChange={e=>setRelOpFiltro(p=>({...p,data_ini:e.target.value}))}/></FG>
+              <FG label="Data Final"><input type="date" value={relOpFiltro.data_fim} onChange={e=>setRelOpFiltro(p=>({...p,data_fim:e.target.value}))}/></FG>
+            </Grid>
+            <div style={{marginTop:10,display:"flex",gap:8,justifyContent:"flex-end",alignItems:"center"}}>
+              <span style={{fontSize:12,color:"#7A8299"}}>{filterOp.length} resultado(s)</span>
+              <button className="btn btn-outline btn-sm" onClick={()=>setRelOpFiltro({lote:"",operacao:"",data_ini:"",data_fim:""})}>Limpar</button>
+              <button className="btn btn-gold btn-sm" onClick={()=>window.print()}>🖨 Imprimir</button>
+            </div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
+            <StatCard label="Operações" value={filterOp.length} color="#C9A84C"/>
+            <StatCard label="Total CU" value={fmtCur(filterOp.reduce((a,c)=>a+(parseFloat(c.valor_cu)||0),0))} color="#C9A84C"/>
+            <StatCard label="Total AU" value={fmtCur(filterOp.reduce((a,c)=>a+(parseFloat(c.valor_au)||0),0))} color="#C9A84C"/>
+            <StatCard label="Total Geral" value={fmtCur(filterOp.reduce((a,c)=>a+(parseFloat(c.custo_total)||0),0))} color="#2ECC71"/>
+          </div>
+          <div style={{overflowX:"auto"}}>
+            <table>
+              <thead><tr><th>Data</th><th>Lote</th><th>Operação</th><th>Cliente</th><th>CNTR</th><th>CU%</th><th>AU-GR</th><th>Peso (kg)</th><th>Peso Seco</th><th>Valor CU</th><th>Valor AU</th><th>Custo Total</th><th>Certif.</th></tr></thead>
+              <tbody>
+                {filterOp.map(c=>(
+                  <tr key={c.id}><td>{c.data}</td><td className="text-gold">{c.lote}</td><td>{c.operacao}</td><td>{c.cliente}</td><td>{fmt(c.cntr)}</td><td>{fmtPct(c.cu_pct)}</td><td>{fmt(c.au_gr)}</td><td>{fmt(c.peso)}</td><td>{fmt(c.peso_seco)}</td><td>{fmtCur(c.valor_cu)}</td><td>{fmtCur(c.valor_au)}</td><td style={{fontWeight:600,color:"#C9A84C"}}>{fmtCur(c.custo_total)}</td><td>{c.certificadora}</td></tr>
+                ))}
+                {filterOp.length===0&&<tr><td colSpan={13} style={{textAlign:"center",color:"#7A8299",padding:32}}>Nenhum resultado.</td></tr>}
+                {filterOp.length>0&&<tr style={{background:"#1E2330",borderTop:"2px solid #C9A84C"}}>
+                  <td colSpan={9} style={{fontWeight:700,color:"#7A8299",fontSize:11}}>TOTAIS</td>
+                  <td style={{fontWeight:700,color:"#C9A84C"}}>{fmtCur(filterOp.reduce((a,c)=>a+(parseFloat(c.valor_cu)||0),0))}</td>
+                  <td style={{fontWeight:700,color:"#C9A84C"}}>{fmtCur(filterOp.reduce((a,c)=>a+(parseFloat(c.valor_au)||0),0))}</td>
+                  <td style={{fontWeight:700,color:"#C9A84C"}}>{fmtCur(filterOp.reduce((a,c)=>a+(parseFloat(c.custo_total)||0),0))}</td>
+                  <td></td>
+                </tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>}
+
+        {/* ── REL. FINANCEIRO ─────────────────────────────────────── */}
+        {tab==="rel_financeiro"&&<div className="fade-in">
+          <div style={{marginBottom:20}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,letterSpacing:".08em",color:"#C9A84C"}}>RELATÓRIO FINANCEIRO</div></div>
+          <div className="card no-print" style={{marginBottom:18}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:".12em",color:"#7A8299",textTransform:"uppercase",marginBottom:10}}>FILTROS</div>
+            <Grid cols={4}>
+              <FG label="Cliente"><input value={relFinFiltro.cliente} onChange={e=>setRelFinFiltro(p=>({...p,cliente:e.target.value}))} placeholder="Filtrar cliente..."/></FG>
+              <FG label="Operação"><input value={relFinFiltro.operacao} onChange={e=>setRelFinFiltro(p=>({...p,operacao:e.target.value}))} placeholder="Filtrar operação..."/></FG>
+              <FG label="Data Inicial"><input type="date" value={relFinFiltro.data_ini} onChange={e=>setRelFinFiltro(p=>({...p,data_ini:e.target.value}))}/></FG>
+              <FG label="Data Final"><input type="date" value={relFinFiltro.data_fim} onChange={e=>setRelFinFiltro(p=>({...p,data_fim:e.target.value}))}/></FG>
+            </Grid>
+            <div style={{marginTop:10,display:"flex",gap:8,justifyContent:"flex-end",alignItems:"center"}}>
+              <span style={{fontSize:12,color:"#7A8299"}}>{filterFin.length} resultado(s)</span>
+              <button className="btn btn-outline btn-sm" onClick={()=>setRelFinFiltro({cliente:"",operacao:"",data_ini:"",data_fim:""})}>Limpar</button>
+              <button className="btn btn-gold btn-sm" onClick={()=>window.print()}>🖨 Imprimir</button>
+            </div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:18}}>
+            <StatCard label="Transações" value={filterFin.length} color="#C9A84C"/>
+            <StatCard label="Total Recebido" value={fmtCur(filterFin.reduce((a,f)=>a+(parseFloat(f.valor)||0),0))} color="#2ECC71"/>
+            <StatCard label="Saldo Atual" value={fmtCur(saldo)} sub={`Base: ${fmtCur(saldoInicial)}`} color="#2ECC71"/>
+          </div>
+          <div style={{overflowX:"auto"}}>
+            <table>
+              <thead><tr><th>Data</th><th>Cliente</th><th>Lote</th><th>Operação</th><th>Valor</th><th>Saldo Anterior</th><th>Saldo Atual</th><th>Forma Pgto</th><th>Obs</th></tr></thead>
+              <tbody>
+                {finWithBal.map(f=>(
+                  <tr key={f.id}><td>{f.data}</td><td>{f.cliente}</td><td className="text-gold">{f.lote}</td><td>{f.operacao}</td><td className="text-green" style={{fontWeight:600}}>{fmtCur(f.valor)}</td><td style={{color:"#7A8299"}}>{fmtCur(f.saldo_anterior)}</td><td style={{color:"#2ECC71",fontWeight:600}}>{fmtCur(f.saldo_atual)}</td><td><span className="tag badge-blue">{f.forma_pgto}</span></td><td style={{color:"#7A8299",fontSize:11}}>{f.obs}</td></tr>
+                ))}
+                {finWithBal.length===0&&<tr><td colSpan={9} style={{textAlign:"center",color:"#7A8299",padding:32}}>Nenhum resultado.</td></tr>}
+                {finWithBal.length>0&&<tr style={{background:"#1E2330",borderTop:"2px solid #2ECC71"}}>
+                  <td colSpan={4} style={{fontWeight:700,color:"#7A8299",fontSize:11}}>TOTAIS</td>
+                  <td style={{fontWeight:700,color:"#2ECC71"}}>{fmtCur(filterFin.reduce((a,f)=>a+(parseFloat(f.valor)||0),0))}</td>
+                  <td></td><td style={{fontWeight:700,color:"#2ECC71"}}>{fmtCur(saldo)}</td><td colSpan={2}></td>
+                </tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>}
+
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
